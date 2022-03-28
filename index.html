@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+
+<h1>Coins</h1>
+<ol id="coins"></ol>
+
+<script>
+setInterval(function(){
+  if(new Date().getMinutes() === 0) {
+    callAPI();
+  }
+},60000)
+
+// for testing
+setInterval(function(){
+  if(new Date().getSeconds() === 0) {
+    let localTime = new Date().toLocaleString();
+    console.log("New minute ! -- ", localTime);
+  }
+},1000)
+
+// function flipIt() {
+//     $('#flip').addClass('animate pulse');
+//     $('#flip').removeClass('animate pulse').delay(1500);
+// }
+
+// const baseURL = data;
+// $.get(baseURL, function(data,status) {
+// 	console.log(data);
+// })
+
+
+
+const ul = document.getElementById('coins');
+var oldcoins = [];
+var newcoins = [];
+
+function callAPI() {
+fetch("https://api2.lunarcrush.com/v2?data=market&type=fast&limit=100")
+  .then(response => response.json())
+  .then((json) => {
+      let results = json.data;
+      for (let i = 0; i < 50; i++) {
+        let coin = `${results[i].s}`;
+        let currentTime = new Date().toLocaleString();
+        // let rank = `${results[i].acr}`;
+        $("#coins").append(`<li>${coin} - ${currentTime}</li>`);
+        // console.log('coin - ', coin);
+        // let value = coin + ' - ' + rank;
+        newcoins.push(coin);
+        }
+    })
+// Local storage ==============================
+    .then((x) => {
+
+    // Get coins =====================
+    var oldcoins = JSON.parse(localStorage.getItem("coins"));
+    console.log('oldcoins - ', oldcoins);
+
+    // Compare old and new coins ================
+    // let oldcoins = ['a','b','c','e'] 
+    // let newcoins = ['a','e','k','l']
+    let push_out = oldcoins.filter(x => !newcoins.includes(x));
+    let push_in = newcoins.filter(x => !oldcoins.includes(x));
+    console.log('Out', push_out);
+    console.log('In', push_in);
+
+    // Call 3 commas, start bots ==================
+
+    for (let i = 0; i < push_in.length; i++) {
+
+    const requestOptions = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        'message_type': 'bot',
+        'bot_id': 8550621,
+        'email_token': '1f9c6e2c-6f71-4fae-ad49-8db2c892b08d',
+        'delay_seconds': 0,
+        'pair': 'USDT_'+push_in[i]
+    })
+    };
+    fetch('https://3commas.io/trade_signal/trading_view', requestOptions)
+    .then(response => response.json())
+    .then(data => console.log('3Commas response - ', data));
+    }
+
+    // Set coins =====================
+    localStorage.setItem("coins", JSON.stringify(newcoins));
+    })
+} // function callAPI end
+    </script>
+</body>
+</html>
